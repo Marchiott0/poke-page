@@ -528,24 +528,35 @@
         }
 
         .tile {
-            height: 64px;
+            height: 70px;
             border-radius: 4px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 4px;
+            padding: 3px 2px;
             text-align: center;
-            font-size: 1rem; font-weight: 700; color: #fff;
+            font-size: 0.95rem; font-weight: 700; color: #fff;
             background: #1e293b;
             border: 3px solid #000;
             box-shadow: inset 2px 2px 0px rgba(255, 255, 255, 0.35), inset -2px -2px 0px rgba(0, 0, 0, 0.5);
             font-family: 'Pixelify Sans', monospace !important;
+            overflow: hidden;
         }
 
         .tile.correct { background: #059669 !important; border-color: #34d399; }
         .tile.partial { background: #d97706 !important; border-color: #fbbf24; }
         .tile.wrong { background: #dc2626 !important; border-color: #f87171; }
 
-        .tile img { width: 42px; height: 42px; object-fit: contain; }
+        .tile img { width: 38px; height: 38px; object-fit: contain; flex-shrink: 0; }
         .tile .arrow { font-size: 1.1rem; line-height: 1; margin-top: 2px; }
+        .tile .poke-tile-name {
+            font-size: 0.72rem;
+            line-height: 1.15;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            padding: 0 1px;
+        }
 
         .type-badge {
             padding: 3px 8px;
@@ -1363,6 +1374,88 @@
             }
 
             const ALL_POKEMON = buildFullDex();
+            const pokemonDataCache = new Map();
+
+            async function fetchPokemonDetails(poke) {
+                if (!poke) return poke;
+                if (poke.isFetched) return poke;
+                if (pokemonDataCache.has(poke.id)) {
+                    Object.assign(poke, pokemonDataCache.get(poke.id));
+                    poke.isFetched = true;
+                    return poke;
+                }
+
+                try {
+                    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${poke.id}`);
+                    if (res.ok) {
+                        const data = await res.json();
+
+                        const rawType1 = data.types[0]?.type?.name || 'normal';
+                        poke.type1 = rawType1.charAt(0).toUpperCase() + rawType1.slice(1);
+
+                        if (data.types[1]) {
+                            const rawType2 = data.types[1].type.name;
+                            poke.type2 = rawType2.charAt(0).toUpperCase() + rawType2.slice(1);
+                        } else {
+                            poke.type2 = 'None';
+                        }
+
+                        poke.height = data.height / 10;
+                        poke.weight = data.weight / 10;
+
+                        let formattedName = data.name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('-');
+                        if (formattedName.toLowerCase() === 'nidoran-f') formattedName = 'Nidoran♀';
+                        if (formattedName.toLowerCase() === 'nidoran-m') formattedName = 'Nidoran♂';
+                        if (formattedName.toLowerCase() === 'mr-mime') formattedName = 'Mr. Mime';
+                        poke.name = formattedName;
+                    }
+
+                    const specRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${poke.id}`);
+                    if (specRes.ok) {
+                        const specData = await specRes.json();
+
+                        const ptEntry = specData.flavor_text_entries.find(e => e.language.name === 'pt' || e.language.name === 'pt-BR');
+                        const enEntry = specData.flavor_text_entries.find(e => e.language.name === 'en');
+                        if (ptEntry) {
+                            poke.desc = ptEntry.flavor_text.replace(/[\n\f]/g, ' ');
+                        } else if (enEntry) {
+                            poke.desc = enEntry.flavor_text.replace(/[\n\f]/g, ' ');
+                        }
+
+                        if (specData.is_legendary) {
+                            poke.stage = 'Lendário';
+                        } else if (specData.is_mythical) {
+                            poke.stage = 'Mítico';
+                        } else if (!specData.evolves_from_species) {
+                            poke.stage = '1º Estágio';
+                        } else {
+                            const parentName = specData.evolves_from_species.name;
+                            const parentSpec = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${parentName}`).then(r => r.ok ? r.json() : null).catch(() => null);
+                            if (parentSpec && parentSpec.evolves_from_species) {
+                                poke.stage = '3º Estágio';
+                            } else {
+                                poke.stage = '2º Estágio';
+                            }
+                        }
+                    }
+
+                    poke.isFetched = true;
+                    pokemonDataCache.set(poke.id, {
+                        type1: poke.type1,
+                        type2: poke.type2,
+                        height: poke.height,
+                        weight: poke.weight,
+                        name: poke.name,
+                        desc: poke.desc,
+                        stage: poke.stage,
+                        isFetched: true
+                    });
+                } catch (err) {
+                    console.log(`Erro ao buscar dados do Pokémon #${poke.id}`, err);
+                }
+
+                return poke;
+            }
 
             async function fetchOfficialPokemonNames() {
                 try {
@@ -1382,6 +1475,27 @@
                         }
                     });
 
+                    const types = ['normal', 'fire', 'water', 'grass', 'electric', 'ice', 'fighting', 'poison', 'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'steel', 'fairy', 'dark'];
+                    types.forEach(async (t) => {
+                        try {
+                            const res = await fetch(`https://pokeapi.co/api/v2/type/${t}`);
+                            if (!res.ok) return;
+                            const typeData = await res.json();
+                            const typeFormatted = t.charAt(0).toUpperCase() + t.slice(1);
+                            typeData.pokemon.forEach(p => {
+                                const id = parseInt(p.pokemon.url.split('/').filter(Boolean).pop());
+                                const pokeObj = ALL_POKEMON.find(item => item.id === id);
+                                if (pokeObj) {
+                                    if (p.slot === 1) {
+                                        pokeObj.type1 = typeFormatted;
+                                    } else if (p.slot === 2) {
+                                        pokeObj.type2 = typeFormatted;
+                                    }
+                                }
+                            });
+                        } catch (err) { }
+                    });
+
                     if (typeof updatePool === 'function') updatePool();
                     if (typeof renderOrderDexBoard === 'function' && activeMode === 'order') renderOrderDexBoard();
                 } catch (err) {
@@ -1397,7 +1511,6 @@
             let selectedGens = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]);
             let activeMode = 'classic';
 
-            // CADA MODO POSSUI SEU PRÓPRIO POKÉMON ALVO, PALPITES E ERROS INDEPENDENTES!
             let modeTargets = {
                 classic: null,
                 silhouette: null,
@@ -1490,21 +1603,25 @@
                 }
             }
 
-            function resetGame(modeToReset) {
+            async function resetGame(modeToReset) {
                 if (currentPool.length === 0) return;
 
                 const modes = ['classic', 'silhouette', 'pokedex', 'sound'];
 
                 if (modeToReset && modes.includes(modeToReset)) {
-                    modeTargets[modeToReset] = currentPool[Math.floor(Math.random() * currentPool.length)];
+                    const picked = currentPool[Math.floor(Math.random() * currentPool.length)];
+                    modeTargets[modeToReset] = picked;
                     modeGuesses[modeToReset] = [];
                     modeErrors[modeToReset] = 0;
+                    await fetchPokemonDetails(picked);
                 } else {
-                    modes.forEach(m => {
-                        modeTargets[m] = currentPool[Math.floor(Math.random() * currentPool.length)];
+                    for (const m of modes) {
+                        const picked = currentPool[Math.floor(Math.random() * currentPool.length)];
+                        modeTargets[m] = picked;
                         modeGuesses[m] = [];
                         modeErrors[m] = 0;
-                    });
+                        await fetchPokemonDetails(picked);
+                    }
                 }
 
                 stats.attempts = 0;
@@ -1536,7 +1653,7 @@
                 });
             }
 
-            function switchMode(mode) {
+            async function switchMode(mode) {
                 activeMode = mode;
                 activeHintRevealed = null;
 
@@ -1549,6 +1666,9 @@
 
                 classicBoard.style.display = mode === 'classic' ? 'flex' : 'none';
                 orderBoard.style.display = mode === 'order' ? 'flex' : 'none';
+
+                const target = getActiveTarget();
+                if (target) await fetchPokemonDetails(target);
 
                 renderAllGuessesForActiveMode();
                 updateHintsUI();
@@ -1935,12 +2055,15 @@
                 }
             }
 
-            function submitGuess(pokeId) {
+            async function submitGuess(pokeId) {
                 const pokemon = ALL_POKEMON.find(p => p.id === pokeId);
                 if (!pokemon) return;
 
                 document.getElementById('searchInput').value = '';
                 document.getElementById('autocompleteList').style.display = 'none';
+
+                const target = getActiveTarget();
+                await Promise.all([fetchPokemonDetails(pokemon), fetchPokemonDetails(target)]);
 
                 if (activeMode === 'order') {
                     const targetSlotPoke = ALL_POKEMON.find(p => p.id === activeDexSlotId);
@@ -1980,7 +2103,6 @@
                 currentGuesses.unshift(pokemon);
                 stats.attempts++;
 
-                const target = getActiveTarget();
                 if (pokemon.id !== target.id) {
                     modeErrors[activeMode]++;
                     updateHintsUI();
@@ -2022,18 +2144,18 @@
             <div class="guess-row">
               <div class="tile" style="background: #0f172a;">
                 <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${guess.id}.png" alt="${guess.name}" />
-                <div style="font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">${guess.name}</div>
+                <div class="poke-tile-name">${guess.name}</div>
               </div>
 
               <div class="tile ${t1Match}">
                 <span class="type-badge" style="background: var(--type-${guess.type1.toLowerCase()});">
-                  ${TYPE_TRANSLATIONS[guess.type1]}
+                  ${TYPE_TRANSLATIONS[guess.type1] || guess.type1}
                 </span>
               </div>
 
               <div class="tile ${t2Match}">
                 <span class="type-badge" style="background: var(--type-${guess.type2.toLowerCase()});">
-                  ${TYPE_TRANSLATIONS[guess.type2]}
+                  ${TYPE_TRANSLATIONS[guess.type2] || guess.type2}
                 </span>
               </div>
 
