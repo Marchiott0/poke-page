@@ -1396,14 +1396,32 @@
                ========================================================= */
             let selectedGens = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]);
             let activeMode = 'classic';
-            let targetPokemon = null;
-            let guesses = [];
-            let currentPool = [];
 
+            // CADA MODO POSSUI SEU PRÓPRIO POKÉMON ALVO, PALPITES E ERROS INDEPENDENTES!
+            let modeTargets = {
+                classic: null,
+                silhouette: null,
+                pokedex: null,
+                sound: null
+            };
+
+            let modeGuesses = {
+                classic: [],
+                silhouette: [],
+                pokedex: [],
+                sound: []
+            };
+
+            let modeErrors = {
+                classic: 0,
+                silhouette: 0,
+                pokedex: 0,
+                sound: 0
+            };
+
+            let currentPool = [];
             let unlockedDexIds = new Set(JSON.parse(localStorage.getItem('pokedle_unlocked_dex') || '[]'));
             let activeDexSlotId = null;
-
-            let currentErrors = 0;
             let slotErrors = {};
             let activeHintRevealed = null;
 
@@ -1472,23 +1490,50 @@
                 }
             }
 
-            function resetGame() {
+            function resetGame(modeToReset) {
                 if (currentPool.length === 0) return;
-                targetPokemon = currentPool[Math.floor(Math.random() * currentPool.length)];
-                guesses = [];
+
+                const modes = ['classic', 'silhouette', 'pokedex', 'sound'];
+
+                if (modeToReset && modes.includes(modeToReset)) {
+                    modeTargets[modeToReset] = currentPool[Math.floor(Math.random() * currentPool.length)];
+                    modeGuesses[modeToReset] = [];
+                    modeErrors[modeToReset] = 0;
+                } else {
+                    modes.forEach(m => {
+                        modeTargets[m] = currentPool[Math.floor(Math.random() * currentPool.length)];
+                        modeGuesses[m] = [];
+                        modeErrors[m] = 0;
+                    });
+                }
+
                 stats.attempts = 0;
-                currentErrors = 0;
                 activeHintRevealed = null;
 
                 document.getElementById('searchInput').value = '';
-                document.getElementById('guessesContainer').innerHTML = '';
                 document.getElementById('autocompleteList').style.display = 'none';
 
+                renderAllGuessesForActiveMode();
                 updateHintsUI();
                 renderModeDisplay();
                 if (activeMode === 'order') {
                     renderOrderDexBoard();
                 }
+            }
+
+            function renderAllGuessesForActiveMode() {
+                const container = document.getElementById('guessesContainer');
+                container.innerHTML = '';
+
+                if (activeMode === 'order') return;
+
+                const currentGuesses = getActiveGuesses();
+                const target = getActiveTarget();
+                if (!target) return;
+
+                currentGuesses.slice().reverse().forEach(guess => {
+                    renderClassicRow(guess, target);
+                });
             }
 
             function switchMode(mode) {
@@ -1505,6 +1550,7 @@
                 classicBoard.style.display = mode === 'classic' ? 'flex' : 'none';
                 orderBoard.style.display = mode === 'order' ? 'flex' : 'none';
 
+                renderAllGuessesForActiveMode();
                 updateHintsUI();
                 renderModeDisplay();
 
@@ -1536,7 +1582,10 @@
                 const box = document.getElementById('modeDisplayBox');
                 box.innerHTML = '';
 
-                if (!targetPokemon) return;
+                const target = getActiveTarget();
+                if (!target) return;
+
+                const currentGuesses = getActiveGuesses();
 
                 if (activeMode === 'classic') {
                     box.innerHTML = `
@@ -1555,18 +1604,18 @@
               </div>
             `;
                 } else if (activeMode === 'silhouette') {
-                    const isRevealed = guesses.some(g => g.id === targetPokemon.id);
+                    const isRevealed = currentGuesses.some(g => g.id === target.id);
                     box.innerHTML = `
               <canvas id="silhouetteCanvas" width="130" height="130" class="silhouette-img ${isRevealed ? 'revealed' : ''}"></canvas>
               <div style="margin-top: 8px; font-size: 0.82rem; color: var(--text-muted); text-align: center;">
                 ${isRevealed ? '✨ Pokémon Revelado!' : 'Quem é esse Pokémon?'}
               </div>
             `;
-                    setTimeout(() => drawSilhouetteCanvas(targetPokemon.id, isRevealed), 10);
+                    setTimeout(() => drawSilhouetteCanvas(target.id, isRevealed), 10);
                 } else if (activeMode === 'pokedex') {
-                    const isRevealed = guesses.some(g => g.id === targetPokemon.id);
-                    const text = targetPokemon.desc || 'Um Pokémon misterioso descoberto na região.';
-                    const regex = new RegExp(targetPokemon.name, 'gi');
+                    const isRevealed = currentGuesses.some(g => g.id === target.id);
+                    const text = target.desc || 'Um Pokémon misterioso descoberto na região.';
+                    const regex = new RegExp(target.name, 'gi');
                     const censoredText = isRevealed
                         ? text
                         : text.replace(regex, `<span class="dex-censor">█████</span>`);
@@ -1576,7 +1625,7 @@
                 "${censoredText}"
               </div>
               <div style="margin-top: 8px; font-size: 0.8rem; color: var(--accent-blue); text-align: center;">
-                📖 Pokédex Entry (Gen ${targetPokemon.gen})
+                📖 Pokédex Entry (Gen ${target.gen})
               </div>
             `;
                 } else if (activeMode === 'sound') {
@@ -1591,11 +1640,12 @@
             }
 
             function playCry() {
-                if (!targetPokemon) return;
-                const audioUrl = `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${targetPokemon.id}.ogg`;
+                const target = getActiveTarget();
+                if (!target) return;
+                const audioUrl = `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${target.id}.ogg`;
                 const audio = new Audio(audioUrl);
                 audio.play().catch(() => {
-                    const legacyAudio = new Audio(`https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/legacy/${targetPokemon.id}.ogg`);
+                    const legacyAudio = new Audio(`https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/legacy/${target.id}.ogg`);
                     legacyAudio.play().catch(() => console.log('Áudio indisponível'));
                 });
             }
@@ -1648,16 +1698,21 @@
 
             function getActiveTarget() {
                 if (activeMode === 'order') {
-                    return ALL_POKEMON.find(p => p.id === activeDexSlotId) || targetPokemon;
+                    return ALL_POKEMON.find(p => p.id === activeDexSlotId) || currentPool[0];
                 }
-                return targetPokemon;
+                return modeTargets[activeMode];
             }
 
             function getActiveErrors() {
                 if (activeMode === 'order') {
                     return slotErrors[activeDexSlotId] || 0;
                 }
-                return currentErrors;
+                return modeErrors[activeMode] || 0;
+            }
+
+            function getActiveGuesses() {
+                if (activeMode === 'order') return [];
+                return modeGuesses[activeMode] || [];
             }
 
             function updateHintsUI() {
@@ -1830,9 +1885,10 @@
                     return;
                 }
 
+                const currentGuesses = getActiveGuesses();
                 const matches = currentPool.filter(p =>
                     p.name.toLowerCase().includes(query) &&
-                    (activeMode === 'order' ? !unlockedDexIds.has(p.id) : !guesses.some(g => g.id === p.id))
+                    (activeMode === 'order' ? !unlockedDexIds.has(p.id) : !currentGuesses.some(g => g.id === p.id))
                 ).slice(0, 8);
 
                 if (matches.length === 0) {
@@ -1918,46 +1974,49 @@
                     return;
                 }
 
-                if (guesses.some(g => g.id === pokemon.id)) return;
+                const currentGuesses = getActiveGuesses();
+                if (currentGuesses.some(g => g.id === pokemon.id)) return;
 
-                guesses.unshift(pokemon);
+                currentGuesses.unshift(pokemon);
                 stats.attempts++;
 
-                if (pokemon.id !== targetPokemon.id) {
-                    currentErrors++;
+                const target = getActiveTarget();
+                if (pokemon.id !== target.id) {
+                    modeErrors[activeMode]++;
                     updateHintsUI();
                 }
 
-                renderClassicRow(pokemon);
+                renderClassicRow(pokemon, target);
 
                 if (activeMode !== 'classic') {
                     renderModeDisplay();
                 }
 
-                if (pokemon.id === targetPokemon.id) {
+                if (pokemon.id === target.id) {
                     handleWin();
                 }
             }
 
-            function renderClassicRow(guess) {
+            function renderClassicRow(guess, target) {
+                const targetPoke = target || getActiveTarget();
                 const container = document.getElementById('guessesContainer');
 
-                const t1Match = guess.type1 === targetPokemon.type1 ? 'correct' :
-                    (guess.type1 === targetPokemon.type2 ? 'partial' : 'wrong');
+                const t1Match = guess.type1 === targetPoke.type1 ? 'correct' :
+                    (guess.type1 === targetPoke.type2 ? 'partial' : 'wrong');
 
-                const t2Match = guess.type2 === targetPokemon.type2 ? 'correct' :
-                    (guess.type2 === targetPokemon.type1 ? 'partial' : 'wrong');
+                const t2Match = guess.type2 === targetPoke.type2 ? 'correct' :
+                    (guess.type2 === targetPoke.type1 ? 'partial' : 'wrong');
 
-                const genMatch = guess.gen === targetPokemon.gen ? 'correct' : 'wrong';
-                const genArrow = guess.gen < targetPokemon.gen ? '↑' : (guess.gen > targetPokemon.gen ? '↓' : '');
+                const genMatch = guess.gen === targetPoke.gen ? 'correct' : 'wrong';
+                const genArrow = guess.gen < targetPoke.gen ? '↑' : (guess.gen > targetPoke.gen ? '↓' : '');
 
-                const hMatch = guess.height === targetPokemon.height ? 'correct' : 'wrong';
-                const hArrow = guess.height < targetPokemon.height ? '↑' : (guess.height > targetPokemon.height ? '↓' : '');
+                const hMatch = guess.height === targetPoke.height ? 'correct' : 'wrong';
+                const hArrow = guess.height < targetPoke.height ? '↑' : (guess.height > targetPoke.height ? '↓' : '');
 
-                const wMatch = guess.weight === targetPokemon.weight ? 'correct' : 'wrong';
-                const wArrow = guess.weight < targetPokemon.weight ? '↑' : (guess.weight > targetPokemon.weight ? '↓' : '');
+                const wMatch = guess.weight === targetPoke.weight ? 'correct' : 'wrong';
+                const wArrow = guess.weight < targetPoke.weight ? '↑' : (guess.weight > targetPoke.weight ? '↓' : '');
 
-                const stageMatch = guess.stage === targetPokemon.stage ? 'correct' : 'wrong';
+                const stageMatch = guess.stage === targetPoke.stage ? 'correct' : 'wrong';
 
                 const rowHTML = `
             <div class="guess-row">
@@ -2012,8 +2071,9 @@
                     confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 } });
                 }
 
-                document.getElementById('modalImg').src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${targetPokemon.id}.png`;
-                document.getElementById('modalName').innerText = targetPokemon.name;
+                const target = getActiveTarget();
+                document.getElementById('modalImg').src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${target.id}.png`;
+                document.getElementById('modalName').innerText = target.name;
                 document.getElementById('statAttempts').innerText = stats.attempts;
                 document.getElementById('statStreak').innerText = stats.streak;
                 document.getElementById('statWins').innerText = stats.wins;
@@ -2025,7 +2085,12 @@
 
             function closeModalAndNext() {
                 document.getElementById('winModal').classList.remove('active');
-                resetGame();
+                if (activeMode === 'order') {
+                    renderOrderDexBoard();
+                    renderModeDisplay();
+                } else {
+                    resetGame(activeMode);
+                }
             }
 
             // EXPOSIÇÃO CONTROLADA APENAS DAS FUNÇÕES DE INTERFACE NECESSÁRIAS
