@@ -720,6 +720,180 @@
         .dex-slot .slot-name { font-size: 0.88rem; font-weight: 700; margin-top: 2px; color: #fff; max-width: 95%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .dex-slot .slot-locked-icon { font-size: 1.4rem; opacity: 0.3; margin: 8px 0; }
 
+        /* MODO TERMO (WORDLE POKÉMON) */
+        .termo-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            align-items: center;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .termo-header-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 8px 12px;
+            background: #090e1a;
+            border: 2px solid #1e293b;
+            border-radius: 6px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.58rem;
+            box-shadow: inset 2px 2px 0px #000;
+        }
+
+        .termo-badge {
+            color: var(--accent-yellow);
+            font-weight: 700;
+        }
+
+        .termo-badge-secondary {
+            color: var(--accent-blue);
+        }
+
+        .termo-grid-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+            align-items: center;
+            padding: 4px 0;
+        }
+
+        .termo-row {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .termo-tile {
+            width: clamp(26px, 7.5vw, 42px);
+            height: clamp(32px, 8.5vw, 48px);
+            border: 3px solid #334155;
+            background: #090e1a;
+            color: #fff;
+            font-family: 'Press Start 2P', monospace;
+            font-size: clamp(0.75rem, 2.2vw, 1.2rem);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            box-shadow: inset -2px -2px 0px #000, inset 2px 2px 0px rgba(255, 255, 255, 0.1);
+            text-transform: uppercase;
+            user-select: none;
+            transition: transform 0.2s ease, background-color 0.3s, border-color 0.3s;
+        }
+
+        .termo-tile.filled {
+            border-color: #64748b;
+            animation: tilePop 0.12s ease;
+        }
+
+        .termo-tile.correct {
+            background: #15803d !important;
+            border-color: #22c55e !important;
+            color: #fff !important;
+            box-shadow: inset -2px -2px 0px #052e16, inset 2px 2px 0px rgba(255, 255, 255, 0.3), 0 0 8px rgba(34, 197, 94, 0.4);
+        }
+
+        .termo-tile.partial {
+            background: #b45309 !important;
+            border-color: #eab308 !important;
+            color: #fff !important;
+            box-shadow: inset -2px -2px 0px #451a03, inset 2px 2px 0px rgba(255, 255, 255, 0.3), 0 0 8px rgba(234, 179, 8, 0.4);
+        }
+
+        .termo-tile.wrong {
+            background: #1e293b !important;
+            border-color: #0f172a !important;
+            color: #64748b !important;
+            opacity: 0.6;
+        }
+
+        @keyframes tilePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.12); }
+            100% { transform: scale(1); }
+        }
+
+        .termo-keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+            margin-top: 4px;
+            padding: 6px;
+            background: #060a12;
+            border: 2px solid #1e293b;
+            border-radius: 8px;
+            box-shadow: inset 2px 2px 0px #000;
+        }
+
+        .kbd-row {
+            display: flex;
+            justify-content: center;
+            gap: 3px;
+            width: 100%;
+        }
+
+        .kbd-key {
+            flex: 1;
+            max-width: 36px;
+            height: 38px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            color: #e2e8f0;
+            font-family: 'Press Start 2P', monospace;
+            font-size: clamp(0.48rem, 1.6vw, 0.7rem);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease;
+            box-shadow: inset -1px -1px 0px #000, inset 1px 1px 0px rgba(255, 255, 255, 0.1);
+            touch-action: manipulation;
+        }
+
+        .kbd-key:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        .kbd-key.wide {
+            max-width: 58px;
+            font-size: 0.42rem;
+            padding: 0 2px;
+        }
+
+        .kbd-key.correct {
+            background: #15803d !important;
+            border-color: #22c55e !important;
+            color: #fff !important;
+        }
+
+        .kbd-key.partial {
+            background: #b45309 !important;
+            border-color: #eab308 !important;
+            color: #fff !important;
+        }
+
+        .kbd-key.wrong {
+            background: #1e293b !important;
+            border-color: #0f172a !important;
+            color: #475569 !important;
+            opacity: 0.4;
+        }
+
         /* PAINEL UNIFICADO DE DICAS (MAX 2 DICAS DESBLOQUEADAS POR ERROS) */
         .hints-panel {
             background: #090e1a;
@@ -1155,11 +1329,18 @@
                 border-radius: 8px;
             }
 
+            .mode-tabs {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 4px;
+            }
+
             .mode-tab {
                 font-size: 0.48rem;
-                padding: 5px 3px;
+                padding: 7px 3px;
                 border-width: 2px;
                 gap: 2px;
+                min-height: 36px;
             }
 
             .search-box {
@@ -1287,6 +1468,7 @@
                     <button class="mode-tab" data-mode="silhouette" onclick="switchMode('silhouette')">👤 Silhueta</button>
                     <button class="mode-tab" data-mode="pokedex" onclick="switchMode('pokedex')">📖 Pokédex</button>
                     <button class="mode-tab" data-mode="sound" onclick="switchMode('sound')">🔊 Som</button>
+                    <button class="mode-tab" data-mode="termo" onclick="switchMode('termo')">🔤 Termo</button>
                 </div>
 
                 <!-- 2. PAINEL DUAL-GRID (DASHBOARD EM 2 COLUNAS: SEM ROLAGEM DE PÁGINA + TAMANHO COMPLETO) -->
@@ -1386,6 +1568,22 @@
 
                             <div class="dex-grid" id="dexGrid">
                                 <!-- Slots gerados via JS -->
+                            </div>
+                        </div>
+
+                        <!-- MODO TERMO (WORDLE POKÉMON) -->
+                        <div id="termoBoard" style="display: none;" class="termo-panel">
+                            <div class="termo-header-status">
+                                <span id="termoAttemptBadge" class="termo-badge">TENTATIVA 1 / 6</span>
+                                <span id="termoWordLengthBadge" class="termo-badge-secondary">7 LETRAS</span>
+                            </div>
+
+                            <div class="termo-grid-container" id="termoGrid">
+                                <!-- Grid de tentativas gerado via JS -->
+                            </div>
+
+                            <div class="termo-keyboard" id="termoKeyboard">
+                                <!-- Teclado virtual QWERTY gerado via JS -->
                             </div>
                         </div>
                     </div>
@@ -1755,22 +1953,29 @@
                 classic: null,
                 silhouette: null,
                 pokedex: null,
-                sound: null
+                sound: null,
+                termo: null
             };
 
             let modeGuesses = {
                 classic: [],
                 silhouette: [],
                 pokedex: [],
-                sound: []
+                sound: [],
+                termo: []
             };
 
             let modeErrors = {
                 classic: 0,
                 silhouette: 0,
                 pokedex: 0,
-                sound: 0
+                sound: 0,
+                termo: 0
             };
+
+            let termoCurrentInput = "";
+            let termoKeyboardState = {};
+            const TERMO_MAX_ATTEMPTS = 6;
 
             let currentPool = [];
             let unlockedDexIds = new Set(JSON.parse(localStorage.getItem('pokedle_unlocked_dex') || '[]'));
@@ -1798,7 +2003,191 @@
                         document.getElementById('autocompleteList').style.display = 'none';
                     }
                 });
+
+                document.addEventListener('keydown', (e) => {
+                    if (activeMode === 'termo') {
+                        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                        if (e.key === 'Enter') {
+                            handleTermoKeyInput('ENTER');
+                        } else if (e.key === 'Backspace') {
+                            handleTermoKeyInput('⌫');
+                        } else if (/^[a-zA-Z]$/.test(e.key)) {
+                            handleTermoKeyInput(e.key.toUpperCase());
+                        }
+                    }
+                });
             });
+
+            function sanitizePokeNameForTermo(name) {
+                if (!name) return '';
+                return name
+                    .toUpperCase()
+                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                    .replace(/[^A-Z]/g, "");
+            }
+
+            function evaluateTermoGuess(guessWord, targetWord) {
+                const result = new Array(guessWord.length).fill('wrong');
+                const targetLetters = targetWord.split('');
+                const guessLetters = guessWord.split('');
+
+                // Pass 1: Correct position
+                for (let i = 0; i < guessLetters.length; i++) {
+                    if (guessLetters[i] === targetLetters[i]) {
+                        result[i] = 'correct';
+                        targetLetters[i] = null;
+                    }
+                }
+
+                // Pass 2: Partial match
+                for (let i = 0; i < guessLetters.length; i++) {
+                    if (result[i] !== 'correct') {
+                        const idx = targetLetters.indexOf(guessLetters[i]);
+                        if (idx !== -1) {
+                            result[i] = 'partial';
+                            targetLetters[idx] = null;
+                        }
+                    }
+                }
+
+                return result;
+            }
+
+            function renderTermoGrid() {
+                const container = document.getElementById('termoGrid');
+                if (!container) return;
+                const target = modeTargets.termo;
+                if (!target) return;
+
+                const sanitizedTarget = sanitizePokeNameForTermo(target.name);
+                const wordLength = sanitizedTarget.length;
+                const guesses = modeGuesses.termo || [];
+
+                document.getElementById('termoAttemptBadge').innerText = `TENTATIVA ${Math.min(guesses.length + 1, TERMO_MAX_ATTEMPTS)} / ${TERMO_MAX_ATTEMPTS}`;
+                document.getElementById('termoWordLengthBadge').innerText = `${wordLength} LETRAS`;
+
+                let html = '';
+                for (let r = 0; r < TERMO_MAX_ATTEMPTS; r++) {
+                    html += `<div class="termo-row">`;
+                    const isSubmittedRow = r < guesses.length;
+                    const isCurrentRow = r === guesses.length;
+                    const rowGuess = isSubmittedRow ? guesses[r] : (isCurrentRow ? termoCurrentInput : '');
+                    const evalResult = isSubmittedRow ? evaluateTermoGuess(rowGuess, sanitizedTarget) : [];
+
+                    for (let c = 0; c < wordLength; c++) {
+                        const char = rowGuess[c] || '';
+                        let tileClass = 'termo-tile';
+                        if (char) tileClass += ' filled';
+                        if (isSubmittedRow && evalResult[c]) {
+                            tileClass += ` ${evalResult[c]}`;
+                        }
+                        html += `<div class="${tileClass}">${char}</div>`;
+                    }
+                    html += `</div>`;
+                }
+                container.innerHTML = html;
+            }
+
+            function renderTermoKeyboard() {
+                const kbd = document.getElementById('termoKeyboard');
+                if (!kbd) return;
+
+                const rows = [
+                    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+                    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+                    ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫']
+                ];
+
+                let html = '';
+                rows.forEach(row => {
+                    html += `<div class="kbd-row">`;
+                    row.forEach(key => {
+                        const state = termoKeyboardState[key] || '';
+                        const isWide = key === 'ENTER' || key === '⌫';
+                        const keyClass = `kbd-key ${isWide ? 'wide' : ''} ${state}`.trim();
+                        html += `<button class="${keyClass}" onclick="handleTermoKeyInput('${key}')">${key}</button>`;
+                    });
+                    html += `</div>`;
+                });
+                kbd.innerHTML = html;
+            }
+
+            function handleTermoKeyInput(key) {
+                if (activeMode !== 'termo') return;
+                const target = modeTargets.termo;
+                if (!target) return;
+
+                const sanitizedTarget = sanitizePokeNameForTermo(target.name);
+                const wordLength = sanitizedTarget.length;
+                const guesses = modeGuesses.termo || [];
+
+                if (guesses.length >= TERMO_MAX_ATTEMPTS) return;
+
+                if (key === 'ENTER') {
+                    submitTermoAttempt();
+                } else if (key === '⌫' || key === 'BACKSPACE') {
+                    if (termoCurrentInput.length > 0) {
+                        termoCurrentInput = termoCurrentInput.slice(0, -1);
+                        renderTermoGrid();
+                    }
+                } else if (/^[A-Z]$/.test(key)) {
+                    if (termoCurrentInput.length < wordLength) {
+                        termoCurrentInput += key;
+                        renderTermoGrid();
+                    }
+                }
+            }
+
+            function submitTermoAttempt(forcedGuessString) {
+                if (activeMode !== 'termo') return;
+                const target = modeTargets.termo;
+                if (!target) return;
+
+                const sanitizedTarget = sanitizePokeNameForTermo(target.name);
+                const wordLength = sanitizedTarget.length;
+                const guesses = modeGuesses.termo || [];
+
+                if (guesses.length >= TERMO_MAX_ATTEMPTS) return;
+
+                let guessString = forcedGuessString ? sanitizePokeNameForTermo(forcedGuessString) : termoCurrentInput;
+
+                if (guessString.length !== wordLength) {
+                    showToastNotification(`⚠️ O nome deve ter exatamente ${wordLength} letras!`);
+                    return;
+                }
+
+                guesses.push(guessString);
+                termoCurrentInput = '';
+                stats.attempts++;
+
+                const evalResult = evaluateTermoGuess(guessString, sanitizedTarget);
+                for (let i = 0; i < guessString.length; i++) {
+                    const char = guessString[i];
+                    const res = evalResult[i];
+                    const currentRes = termoKeyboardState[char];
+                    if (res === 'correct') {
+                        termoKeyboardState[char] = 'correct';
+                    } else if (res === 'partial' && currentRes !== 'correct') {
+                        termoKeyboardState[char] = 'partial';
+                    } else if (res === 'wrong' && !currentRes) {
+                        termoKeyboardState[char] = 'wrong';
+                    }
+                }
+
+                renderTermoGrid();
+                renderTermoKeyboard();
+
+                if (guessString === sanitizedTarget) {
+                    handleWin();
+                } else if (guesses.length >= TERMO_MAX_ATTEMPTS) {
+                    modeErrors.termo = TERMO_MAX_ATTEMPTS;
+                    updateHintsUI();
+                    showToastNotification(`❌ Fim de jogo! O Pokémon era ${target.name}!`);
+                } else {
+                    modeErrors.termo = guesses.length;
+                    updateHintsUI();
+                }
+            }
 
             function renderGenButtons() {
                 const grid = document.getElementById('genGrid');
@@ -1846,13 +2235,17 @@
             async function resetGame(modeToReset) {
                 if (currentPool.length === 0) return;
 
-                const modes = ['classic', 'silhouette', 'pokedex', 'sound'];
+                const modes = ['classic', 'silhouette', 'pokedex', 'sound', 'termo'];
 
                 if (modeToReset && modes.includes(modeToReset)) {
                     const picked = currentPool[Math.floor(Math.random() * currentPool.length)];
                     modeTargets[modeToReset] = picked;
                     modeGuesses[modeToReset] = [];
                     modeErrors[modeToReset] = 0;
+                    if (modeToReset === 'termo') {
+                        termoCurrentInput = '';
+                        termoKeyboardState = {};
+                    }
                     await fetchPokemonDetails(picked);
                 } else {
                     for (const m of modes) {
@@ -1860,6 +2253,10 @@
                         modeTargets[m] = picked;
                         modeGuesses[m] = [];
                         modeErrors[m] = 0;
+                        if (m === 'termo') {
+                            termoCurrentInput = '';
+                            termoKeyboardState = {};
+                        }
                         await fetchPokemonDetails(picked);
                     }
                 }
@@ -1875,6 +2272,9 @@
                 renderModeDisplay();
                 if (activeMode === 'order') {
                     renderOrderDexBoard();
+                } else if (activeMode === 'termo') {
+                    renderTermoGrid();
+                    renderTermoKeyboard();
                 }
             }
 
@@ -1882,7 +2282,7 @@
                 const container = document.getElementById('guessesContainer');
                 container.innerHTML = '';
 
-                if (activeMode === 'order') return;
+                if (activeMode === 'order' || activeMode === 'termo') return;
 
                 const currentGuesses = getActiveGuesses();
                 const target = getActiveTarget();
@@ -1903,9 +2303,11 @@
 
                 const classicBoard = document.getElementById('classicBoard');
                 const orderBoard = document.getElementById('orderBoard');
+                const termoBoard = document.getElementById('termoBoard');
 
                 classicBoard.style.display = mode === 'classic' ? 'flex' : 'none';
                 orderBoard.style.display = mode === 'order' ? 'flex' : 'none';
+                termoBoard.style.display = mode === 'termo' ? 'flex' : 'none';
 
                 const target = getActiveTarget();
                 if (target) await fetchPokemonDetails(target);
@@ -1916,6 +2318,9 @@
 
                 if (mode === 'order') {
                     renderOrderDexBoard();
+                } else if (mode === 'termo') {
+                    renderTermoGrid();
+                    renderTermoKeyboard();
                 }
             }
 
@@ -1996,6 +2401,15 @@
               </div>
             `;
                     playCry();
+                } else if (activeMode === 'termo') {
+                    box.innerHTML = `
+              <div style="font-weight: 800; font-size: 1.05rem; color: var(--accent-yellow); margin-bottom: 4px; text-align: center;">
+                🔤 TERMO POKÉMON
+              </div>
+              <div style="color: var(--text-muted); font-size: 0.82rem; text-align: center;">
+                Adivinhe o nome em 6 tentativas! Verde = Posição Correta | Amarelo = Posição Errada.
+              </div>
+            `;
                 }
             }
 
@@ -2245,11 +2659,24 @@
                     return;
                 }
 
-                const currentGuesses = getActiveGuesses();
-                const matches = currentPool.filter(p =>
-                    p.name.toLowerCase().includes(query) &&
-                    (activeMode === 'order' ? !unlockedDexIds.has(p.id) : !currentGuesses.some(g => g.id === p.id))
-                ).slice(0, 8);
+                let matches = [];
+                if (activeMode === 'termo') {
+                    const target = modeTargets.termo;
+                    const targetLen = target ? sanitizePokeNameForTermo(target.name).length : 0;
+                    matches = currentPool.filter(p => {
+                        const s = sanitizePokeNameForTermo(p.name);
+                        return s.length === targetLen && p.name.toLowerCase().includes(query);
+                    }).slice(0, 8);
+                } else if (activeMode === 'order') {
+                    matches = currentPool.filter(p =>
+                        p.name.toLowerCase().includes(query) && !unlockedDexIds.has(p.id)
+                    ).slice(0, 8);
+                } else {
+                    const currentGuesses = getActiveGuesses();
+                    matches = currentPool.filter(p =>
+                        p.name.toLowerCase().includes(query) && !currentGuesses.some(g => g.id === p.id)
+                    ).slice(0, 8);
+                }
 
                 if (matches.length === 0) {
                     list.style.display = 'none';
@@ -2304,6 +2731,11 @@
 
                 const target = getActiveTarget();
                 await Promise.all([fetchPokemonDetails(pokemon), fetchPokemonDetails(target)]);
+
+                if (activeMode === 'termo') {
+                    submitTermoAttempt(pokemon.name);
+                    return;
+                }
 
                 if (activeMode === 'order') {
                     const targetSlotPoke = ALL_POKEMON.find(p => p.id === activeDexSlotId);
@@ -2465,6 +2897,7 @@
             window.submitGuess = submitGuess;
             window.playCry = playCry;
             window.closeModalAndNext = closeModalAndNext;
+            window.handleTermoKeyInput = handleTermoKeyInput;
         })();
     </script>
 </body>
