@@ -1,0 +1,185 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* BASE RESET & RESPONSIVE CONTEXT */
+html,
+body {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: radial-gradient(circle at 50% 30%, #e2e4e9 0%, #c4c5c7 50%, #9ca3af 100%);
+    font-family: 'Outfit', sans-serif;
+    color: var(--text-main);
+    overflow-x: hidden;
+}
+
+/* CONTAINER PRINCIPAL (DEFAULTS TO 100vh ON WIDESCREEN DESKTOP, FLUID ON MOBILE/PORTRAIT) */
+.gameboy-console-fullscreen {
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0.85rem 1.25rem 0.5rem 1.25rem;
+    box-shadow: inset 0 10px 30px rgba(255, 255, 255, 0.6), inset 0 -10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* MOLDURA DA TELA DO GAME BOY (BEZEL) */
+.screen-bezel {
+    background: var(--gb-screen-bezel);
+    border: 5px solid #1e222d;
+    border-radius: 20px 20px 36px 20px;
+    padding: 1rem 1.25rem;
+    box-shadow:
+        0 12px 35px rgba(0, 0, 0, 0.4),
+        inset 0 6px 14px rgba(0, 0, 0, 0.9);
+    width: 100%;
+    max-width: 1380px;
+    margin: 0 auto;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* HEADER DO BEZEL: BATTERY + LOGO GAME BOY COLOR */
+.bezel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.6rem;
+    padding: 0 6px;
+    flex-shrink: 0;
+}
+
+.battery-led-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.battery-led {
+    width: 12px;
+    height: 12px;
+    background: #ef4444;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #ef4444;
+    animation: pulseLed 2s infinite;
+}
+
+@keyframes pulseLed {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.battery-text {
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: #9ca3af;
+    letter-spacing: 0.5px;
+}
+
+.gb-logo {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.95rem;
+    font-style: italic;
+    color: #94a3b8;
+    letter-spacing: 1px;
+}
+
+.gb-color-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    margin-top: 2px;
+}
+
+.gb-color-text span.c1 { color: #3b82f6; }
+.gb-color-text span.c2 { color: #ef4444; }
+.gb-color-text span.c3 { color: #eab308; }
+.gb-color-text span.c4 { color: #22c55e; }
+.gb-color-text span.c5 { color: #a855f7; }
+
+/* TELA LCD INTERNA COM ESTILO RETRO 16-BIT (DUAL-PANE) */
+.lcd-screen {
+    background: var(--gb-screen-bg);
+    border: 4px solid #000;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.95);
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    font-family: 'Pixelify Sans', 'Press Start 2P', monospace;
+}
+
+/* Efeito Scanlines Retrô */
+.lcd-screen::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    border-radius: 8px;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.18) 50%);
+    background-size: 100% 4px;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+/* PAINEL DUAL-GRID (2 COLUNAS LADO A LADO NA TELA) */
+.lcd-grid-content {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 1rem;
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+}
+
+.lcd-pane-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    min-height: 0;
+    min-width: 0;
+    max-width: 100%;
+    overflow-y: auto;
+}
+
+.lcd-pane-right {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+}
+
+.shake {
+    animation: shake 0.4s ease;
+    border-color: #ef4444 !important;
+}

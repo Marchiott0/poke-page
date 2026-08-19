@@ -1,0 +1,40 @@
+:root {
+    /* Game Boy Color Classic Theme Colors */
+    --gb-body: #c4c5c7;
+    --gb-body-dark: #b0b1b5;
+    --gb-screen-bezel: #2d3142;
+    --gb-screen-bg: #090d16;
+    --gb-btn-red: #a81c51;
+    --gb-btn-dark: #373b49;
+    --gb-btn-grey: #6b7280;
+
+    --accent-yellow: #facc15;
+    --accent-blue: #38bdf8;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+
+    /* Feedback Colors */
+    --color-correct: #10b981;
+    --color-partial: #f59e0b;
+    --color-wrong: #ef4444;
+
+    /* Type Colors */
+    --type-normal: #A8A878;
+    --type-fire: #F08030;
+    --type-water: #6890F0;
+    --type-grass: #78C850;
+    --type-electric: #F8D030;
+    --type-ice: #98D8D8;
+    --type-fighting: #C03028;
+    --type-poison: #A040A0;
+    --type-ground: #E0C068;
+    --type-flying: #A890F0;
+    --type-psychic: #F85888;
+    --type-bug: #A8B820;
+    --type-rock: #B8A038;
+    --type-ghost: #70559B;
+    --type-dragon: #7038F8;
+    --type-steel: #B8B8D0;
+    --type-fairy: #EE99AC;
+    --type-dark: #705848;
+}
