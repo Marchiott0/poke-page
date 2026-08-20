@@ -685,15 +685,66 @@
     padding: 4px;
 }
 
+/* MULTI-BOARD LAYOUT (Dueto / Quarteto) */
+.wordle-boards-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    align-items: center;
+}
+
+
+
+.wordle-boards-wrapper.dueto,
+.wordle-boards-wrapper.quarteto {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.wordle-boards-wrapper.dueto .termo-grid-container {
+    width: calc(50% - 6px);
+    margin: 0 0 24px 0;
+    padding: 0;
+}
+
+.wordle-boards-wrapper.quarteto .termo-grid-container {
+    width: calc(25% - 9px);
+    margin: 0;
+    padding: 0;
+}
+
+.wordle-boards-wrapper.dueto .termo-tile,
+.wordle-boards-wrapper.quarteto .termo-tile {
+    width: 100%;
+    border-width: 2px;
+}
+
+.wordle-boards-wrapper.dueto .termo-row,
+.wordle-boards-wrapper.quarteto .termo-row {
+    gap: 3px;
+}
+
 .termo-row {
     display: flex;
-    gap: 6px;
     justify-content: center;
+    gap: 4px;
+    width: 100%;
+    margin: 0 auto;
+    container-type: inline-size;
 }
 
 .termo-tile {
-    width: 44px;
-    height: 44px;
+    flex: 1 1 0;
+    width: 100%;
+    max-width: 50px;
+    aspect-ratio: 1;
+    height: auto;
+    font-size: min(3rem, calc(70cqi / var(--word-length, 5)));
     border: 2px solid #334155;
     border-radius: 6px;
     background: #0f172a;
@@ -701,7 +752,6 @@
     align-items: center;
     justify-content: center;
     font-family: 'Press Start 2P', monospace;
-    font-size: 1.15rem;
     font-weight: 700;
     color: #fff;
     text-shadow: 1px 1px 0px #000;

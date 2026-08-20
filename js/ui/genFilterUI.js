@@ -29,7 +29,7 @@ export function toggleGen(genNum) {
     updatePool();
 
     if (window.resetGame) {
-        window.resetGame(gameState.activeMode);
+        window.resetGame();
     }
 }
 
@@ -44,6 +44,6 @@ export function selectGens(presetArr) {
     updatePool();
 
     if (window.resetGame) {
-        window.resetGame(gameState.activeMode);
+        window.resetGame();
     }
 }

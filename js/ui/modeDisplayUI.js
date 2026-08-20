@@ -5,13 +5,18 @@ import { renderTermoGrid } from './termoUI.js';
 import { renderAllGuessesForActiveMode } from './classicUI.js';
 import { updateHintsUI } from './hintsUI.js';
 import { fetchPokemonDetails, playCry } from '../services/pokeapi.js';
+import { showWordleIntroModal } from './modalUI.js';
 
 export function switchMode(mode) {
     gameState.activeMode = mode;
     gameState.activeHintRevealed = null;
 
     document.querySelectorAll('.mode-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.mode === mode);
+        if (mode === 'dueto' || mode === 'quarteto') {
+            tab.classList.toggle('active', tab.dataset.mode === 'termo');
+        } else {
+            tab.classList.toggle('active', tab.dataset.mode === mode);
+        }
     });
 
     const classicBoard = document.getElementById('classicBoard');
@@ -29,7 +34,7 @@ export function switchMode(mode) {
         classicBoard.classList.toggle('sound-mode', mode === 'sound');
     }
     if (orderBoard) orderBoard.style.display = (mode === 'order') ? 'flex' : 'none';
-    if (termoPanel) termoPanel.style.display = (mode === 'termo') ? 'flex' : 'none';
+    if (termoPanel) termoPanel.style.display = (mode === 'termo' || mode === 'dueto' || mode === 'quarteto') ? 'flex' : 'none';
     if (silhouetteBoard) silhouetteBoard.style.display = (mode === 'silhouette') ? 'flex' : 'none';
 
     // Mover dinamicamente a barra de busca para o local correto dependendo do modo
@@ -43,9 +48,9 @@ export function switchMode(mode) {
 
         const searchInput = document.getElementById('searchBox');
         if (searchInput) {
-            if (mode === 'termo') {
-                const target = getActiveTarget();
-                const targetNameLen = target ? target.name.replace(/[^a-zA-Z]/g, '').length : 0;
+            if (mode === 'termo' || mode === 'dueto' || mode === 'quarteto') {
+                const targets = gameState.modeTargets[mode];
+                const targetNameLen = targets && targets.length > 0 ? targets[0].name.replace(/[^a-zA-Z]/g, '').length : 0;
                 searchInput.placeholder = `🔍 Busca Auxiliar: Pokémon com ${targetNameLen} letras...`;
             } else if (mode === 'silhouette') {
                 searchInput.placeholder = "🔍 Quem é esse Pokémon? Digite o palpite...";
@@ -57,9 +62,13 @@ export function switchMode(mode) {
 
     renderModeDisplay();
 
+    if (mode === 'termo' || mode === 'dueto' || mode === 'quarteto') {
+        showWordleIntroModal();
+    }
+
     if (mode === 'order') {
         renderOrderDexBoard();
-    } else if (mode === 'termo') {
+    } else if (mode === 'termo' || mode === 'dueto' || mode === 'quarteto') {
         renderTermoGrid();
     } else {
         renderAllGuessesForActiveMode();
@@ -165,15 +174,25 @@ export function renderModeDisplay() {
                 </div>
             </div>
         `;
-    } else if (mode === 'termo') {
-        const targetNameLen = target.name.replace(/[^a-zA-Z]/g, '').length;
+    } else if (mode === 'termo' || mode === 'dueto' || mode === 'quarteto') {
+        const targetNameLen = target && target.length > 0 ? target[0].name.replace(/[^a-zA-Z]/g, '').length : 0;
+        
+        let title = '🔤 POKÉ-TERMO ARCADE';
+        if (mode === 'dueto') title = '👯 DUETO ARCADE';
+        if (mode === 'quarteto') title = '🧩 QUARTETO ARCADE';
+
         displayBox.innerHTML = `
             <div style="text-align: center; width: 100%;">
                 <div style="font-family: 'Press Start 2P', monospace; font-size: 0.72rem; color: #22c55e;">
-                    🔤 POKÉ-TERMO ARCADE
+                    ${title}
                 </div>
                 <div style="font-size: 0.85rem; color: #86efac; margin-top: 4px; font-family: 'Pixelify Sans', monospace;">
-                    Descubra o Pokémon de <strong>${targetNameLen} letras</strong> em até 6 tentativas!
+                    Descubra os Pokémon de <strong>${targetNameLen} letras</strong> em até 6 tentativas!
+                </div>
+                <div style="display: flex; gap: 4px; justify-content: center; margin-top: 10px;">
+                    <button class="preset-btn" style="font-size: 0.6rem; padding: 4px 6px; ${mode === 'termo' ? 'background: #0f172a; border-color: #3b82f6;' : ''}" onclick="switchMode('termo')">TERMO</button>
+                    <button class="preset-btn" style="font-size: 0.6rem; padding: 4px 6px; ${mode === 'dueto' ? 'background: #0f172a; border-color: #3b82f6;' : ''}" onclick="switchMode('dueto')">DUETO</button>
+                    <button class="preset-btn" style="font-size: 0.6rem; padding: 4px 6px; ${mode === 'quarteto' ? 'background: #0f172a; border-color: #3b82f6;' : ''}" onclick="switchMode('quarteto')">QUARTETO</button>
                 </div>
             </div>
         `;
