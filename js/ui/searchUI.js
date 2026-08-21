@@ -67,7 +67,7 @@ export function renderAutocomplete(query) {
         return;
     }
 
-    if (gameState.activeMode === 'termo') {
+    if (gameState.activeMode === 'termo' || gameState.activeMode === 'dueto' || gameState.activeMode === 'quarteto') {
         renderTermoFilteredAutocomplete(query);
         return;
     }
@@ -98,13 +98,14 @@ export function renderAutocomplete(query) {
     autocompleteList.style.display = 'block';
 }
 
-/* FILTRO EXCLUSIVO PARA O MODO TERMO: MOSTRA APENAS POKÉMON COM O NÚMERO DE LETRAS IGUAL AO ALVO */
+/* FILTRO EXCLUSIVO PARA O MODO WORDLE: MOSTRA APENAS POKÉMON COM O NÚMERO DE LETRAS IGUAL AO ALVO */
 function renderTermoFilteredAutocomplete(query) {
     const autocompleteList = document.getElementById('autocompleteList');
-    const target = getActiveTarget();
-    if (!target || !autocompleteList) return;
+    const mode = gameState.activeMode;
+    const targets = gameState.modeTargets[mode];
+    if (!targets || targets.length === 0 || !autocompleteList) return;
 
-    const targetCleanName = target.name.replace(/[^a-zA-Z]/g, '');
+    const targetCleanName = targets[0].name.replace(/[^a-zA-Z]/g, '');
     const requiredLength = targetCleanName.length;
 
     const matches = gameState.currentPool.filter(p => {
@@ -175,8 +176,8 @@ export async function submitGuessById(id) {
         return;
     }
 
-    if (mode === 'termo') {
-        // No Termo, a busca auxiliar usa submitTermoByPokeName
+    if (mode === 'termo' || mode === 'dueto' || mode === 'quarteto') {
+        // Nos modos diários, a busca auxiliar usa submitTermoByPokeName
         return;
     }
 

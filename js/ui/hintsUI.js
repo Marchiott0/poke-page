@@ -2,7 +2,7 @@ import { gameState, getActiveErrors, getActiveTarget } from '../state/gameState.
 import { TYPE_TRANSLATIONS } from '../data/constants.js';
 
 export function getHintRequirements() {
-    if (gameState.activeMode === 'termo') {
+    if (gameState.activeMode === 'termo' || gameState.activeMode === 'dueto' || gameState.activeMode === 'quarteto') {
         return { req1: 2, req2: 4 };
     }
     return { req1: 3, req2: 6 };
@@ -77,16 +77,23 @@ export function triggerHint(num) {
 }
 
 export function renderHintContent(num) {
-    const target = getActiveTarget();
-    if (!target) return "";
+    const mode = gameState.activeMode;
+    const isWordle = mode === 'termo' || mode === 'dueto' || mode === 'quarteto';
+    
+    // Para modos Wordle, a dica foca sempre no primeiro alvo (tabuleiro superior esquerdo)
+    const targets = isWordle ? gameState.modeTargets[mode] : [getActiveTarget()];
+    if (!targets || targets.length === 0) return "";
+    
+    const target = targets[0];
+    const boardPrefix = (mode === 'dueto' || mode === 'quarteto') ? "Do Tabuleiro 1: " : "";
 
     if (num === 1) {
         let text = "";
-        if (gameState.activeMode === 'silhouette' || gameState.activeMode === 'sound' || gameState.activeMode === 'termo') {
+        if (mode === 'silhouette' || mode === 'sound' || isWordle) {
             const t1 = TYPE_TRANSLATIONS[target.type1] || target.type1;
             const t2 = target.type2 !== 'None' ? ` / ${TYPE_TRANSLATIONS[target.type2] || target.type2}` : '';
-            text = `O tipo principal deste Pokémon é <span class="hint-highlight">${t1}${t2}</span>.`;
-        } else if (gameState.activeMode === 'pokedex') {
+            text = `${boardPrefix}O tipo principal deste Pokémon é <span class="hint-highlight">${t1}${t2}</span>.`;
+        } else if (mode === 'pokedex') {
             text = `Este Pokémon pertence à <span class="hint-highlight">Geração ${target.gen}</span>.`;
         } else {
             text = `A primeira letra do nome é <span class="hint-highlight">'${target.name.charAt(0).toUpperCase()}'</span> e ele pertence à <span class="hint-highlight">Gen ${target.gen}</span>.`;
@@ -96,8 +103,9 @@ export function renderHintContent(num) {
 
     if (num === 2) {
         let text = "";
-        if (gameState.activeMode === 'termo') {
-            text = `A palavra tem <span class="hint-highlight">${target.name.length} letras</span> e começa com <span class="hint-highlight">'${target.name.charAt(0).toUpperCase()}'</span>.`;
+        if (isWordle) {
+            const cleanName = target.name.replace(/[^a-zA-Z]/g, '');
+            text = `${boardPrefix}A palavra tem <span class="hint-highlight">${cleanName.length} letras</span> e começa com <span class="hint-highlight">'${cleanName.charAt(0).toUpperCase()}'</span>.`;
         } else if (target.desc && !target.desc.includes("Pokémon #")) {
             text = `Pokedex Entry: <em>"${target.desc.replace(new RegExp(target.name, 'gi'), '█████')}"</em>`;
         } else {

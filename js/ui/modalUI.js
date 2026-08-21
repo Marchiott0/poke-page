@@ -78,3 +78,16 @@ export function closeModalAndNext() {
         window.resetGame(gameState.activeMode);
     }
 }
+
+export function showWordleIntroModal() {
+    const modal = document.getElementById('wordleIntroModal');
+    if (modal) {
+        modal.classList.add('active');
+    }
+}
+
+export function closeWordleIntroModal() {
+    const modal = document.getElementById('wordleIntroModal');
+    if (modal) modal.classList.remove('active');
+}
+window.closeWordleIntroModal = closeWordleIntroModal;

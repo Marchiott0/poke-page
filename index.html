@@ -252,6 +252,20 @@
 
     </div>
 
+    <!-- MODAL DE INTRODUÇÃO AOS MODOS WORDLE -->
+    <div class="modal-overlay" id="wordleIntroModal">
+        <div class="modal-card">
+            <div class="modal-title" style="color: #3b82f6;">DESAFIO DIÁRIO</div>
+            <div style="font-size: 0.85rem; color: #cbd5e1; font-family: 'Pixelify Sans', monospace; margin-top: 12px; margin-bottom: 20px; text-align: justify; line-height: 1.4;">
+                Bem-vindo aos modos diários de adivinhação! 📅<br><br>
+                <strong style="color: #facc15;">ATENÇÃO:</strong> Os Pokémon sorteados hoje dependem das <strong>gerações selecionadas no painel esquerdo</strong>.<br><br>
+                Se você trocar as gerações no meio do jogo, o tabuleiro recarrega para o desafio exclusivo daquela nova combinação (seu progresso anterior fica salvo na combinação original).<br><br>
+                <em>Dica: Escolha suas gerações favoritas no menu esquerdo ANTES de fazer sua primeira tentativa!</em>
+            </div>
+            <button type="button" class="btn-primary" onclick="closeWordleIntroModal()">ENTENDI, VAMOS JOGAR!</button>
+        </div>
+    </div>
+
     <!-- MODAL DE VITÓRIA / ACERTO DE POKÉMON -->
     <div class="modal-overlay" id="winModal">
         <div class="modal-card">

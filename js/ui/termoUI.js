@@ -1,75 +1,95 @@
-import { gameState, getActiveTarget } from '../state/gameState.js';
+import { gameState, getActiveTargets, saveDailyGuesses } from '../state/gameState.js';
 import { ALL_POKEMON } from '../data/database.js';
 import { showToastNotification } from './toast.js';
-import { showWinModal } from './modalUI.js';
 import { updateHintsUI } from './hintsUI.js';
 
 let currentTermoRow = [];
 
 export function renderTermoGrid() {
-    const termoGridContainer = document.getElementById('termoGridContainer');
+    const wrapper = document.getElementById('termoGridContainer');
     const badgeAttempts = document.getElementById('termoBadgeAttempts');
     const badgeLetters = document.getElementById('termoBadgeLetters');
 
-    if (!termoGridContainer) return;
+    if (!wrapper) return;
 
-    const target = getActiveTarget();
-    if (!target) return;
+    const mode = gameState.activeMode;
+    wrapper.className = `wordle-boards-wrapper ${mode}`;
 
-    const targetCleanName = target.name.replace(/[^a-zA-Z]/g, '').toUpperCase();
-    const wordLength = targetCleanName.length;
+    const targets = getActiveTargets();
+    if (!targets || targets.length === 0) return;
+
+    const targetCleanNames = targets.map(t => t.name.replace(/[^a-zA-Z]/g, '').toUpperCase());
+    const wordLength = targetCleanNames[0].length;
+
+    wrapper.style.setProperty('--word-length', wordLength);
 
     if (badgeLetters) badgeLetters.innerText = `${wordLength} LETRAS`;
 
-    const guesses = gameState.modeGuesses.termo || [];
-    if (badgeAttempts) badgeAttempts.innerText = `${guesses.length}/6 TENTATIVAS`;
+    const guesses = gameState.modeGuesses[mode] || [];
+    const MAX_ATTEMPTS = 6;
+    if (badgeAttempts) badgeAttempts.innerText = `${guesses.length}/${MAX_ATTEMPTS} TENTATIVAS`;
 
-    const isGameOver = guesses.length >= 6 && !guesses.includes(targetCleanName);
-    const isWon = guesses.includes(targetCleanName);
+    const allWon = targetCleanNames.every(name => guesses.includes(name));
+    const isGameOver = allWon || guesses.length >= MAX_ATTEMPTS;
 
     let html = '';
 
-    for (let r = 0; r < 6; r++) {
-        const rowGuess = guesses[r];
-        html += `<div class="termo-row">`;
+    // Renderizar os tabuleiros
+    targetCleanNames.forEach((targetCleanName) => {
+        const winIndex = guesses.indexOf(targetCleanName);
+        const isWon = winIndex !== -1;
+        
+        html += `<div class="termo-grid-container">`;
+        for (let r = 0; r < MAX_ATTEMPTS; r++) {
+            // Se já ganhou neste tabuleiro, não exibir os palpites subsequentes
+            const rowGuess = (isWon && r > winIndex) ? undefined : guesses[r];
+            html += `<div class="termo-row">`;
 
-        for (let c = 0; c < wordLength; c++) {
-            let letter = '';
-            let statusClass = '';
+            for (let c = 0; c < wordLength; c++) {
+                let letter = '';
+                let statusClass = '';
 
-            if (rowGuess) {
-                letter = rowGuess[c] || '';
-                statusClass = getLetterStatusClass(rowGuess, c, targetCleanName);
-            } else if (r === guesses.length && !isGameOver && !isWon) {
-                letter = currentTermoRow[c] || '';
-                statusClass = letter ? 'filled' : '';
+                if (rowGuess) {
+                    letter = rowGuess[c] || '';
+                    statusClass = getLetterStatusClass(rowGuess, c, targetCleanName);
+                } else if (r === guesses.length && !isGameOver && !isWon) {
+                    letter = currentTermoRow[c] || '';
+                    statusClass = letter ? 'filled' : '';
+                }
+
+                html += `<div class="termo-tile ${statusClass}">${letter}</div>`;
             }
 
-            html += `<div class="termo-tile ${statusClass}">${letter}</div>`;
+            html += `</div>`;
         }
-
         html += `</div>`;
-    }
+    });
 
-    // Banner de Game Over inline (sem modal para Termo)
+    // Banner de Game Over / Vitória inline (Movido para o topo)
+    let bannerHtml = '';
     if (isGameOver) {
-        html += `
-            <div class="termo-gameover-banner">
-                <div class="termo-gameover-title">❌ FIM DE JOGO!</div>
-                <div class="termo-gameover-answer">
-                    Era: <span class="termo-gameover-name">${target.name.toUpperCase()}</span>
+        const missed = targetCleanNames.filter(name => !guesses.includes(name));
+        if (missed.length > 0) {
+            bannerHtml = `
+                <div class="termo-gameover-banner" style="width: 100%; margin-bottom: 12px; margin-top: 0;">
+                    <div class="termo-gameover-title">❌ FIM DE JOGO!</div>
+                    <div class="termo-gameover-answer">
+                        Era(m): <span class="termo-gameover-name">${missed.join(', ')}</span>
+                    </div>
+                    <div style="font-size:0.7rem; color:#94a3b8; margin-top:8px;">Volte amanhã para um novo desafio.</div>
                 </div>
-                <button type="button" class="btn-primary" style="margin-top:12px;" onclick="resetGame('termo')">
-                    🔄 TENTAR NOVAMENTE
-                </button>
-            </div>
-        `;
+            `;
+        } else {
+            bannerHtml = `
+                <div class="termo-gameover-banner" style="width: 100%; border-color:#22c55e; box-shadow:0 0 20px rgba(34,197,94,0.3); margin-bottom: 12px; margin-top: 0;">
+                    <div class="termo-gameover-title" style="color:#4ade80;">🏆 VITÓRIA!</div>
+                    <div style="font-size:0.7rem; color:#94a3b8; margin-top:8px;">Volte amanhã para um novo desafio.</div>
+                </div>
+            `;
+        }
     }
 
-    termoGridContainer.innerHTML = html;
-
-    // Limpar teclado virtual (se existir no DOM, manter vazio)
-    renderTermoKeyboard(targetCleanName);
+    wrapper.innerHTML = bannerHtml + html;
 }
 
 function getLetterStatusClass(guessWord, index, targetWord) {
@@ -87,23 +107,20 @@ function getLetterStatusClass(guessWord, index, targetWord) {
     return 'wrong';
 }
 
-export function renderTermoKeyboard(targetWord) {
-    const container = document.getElementById('termoKeyboardContainer');
-    // Teclado virtual removido — usuário usa teclado físico/nativo
-    if (container) container.innerHTML = '';
-}
-
 export function handleTermoKeyClick(key) {
-    const target = getActiveTarget();
-    if (!target) return;
+    const mode = gameState.activeMode;
+    const targets = getActiveTargets();
+    if (!targets || targets.length === 0) return;
 
-    const targetCleanName = target.name.replace(/[^a-zA-Z]/g, '').toUpperCase();
-    const wordLength = targetCleanName.length;
-    const guesses = gameState.modeGuesses.termo || [];
+    const targetCleanNames = targets.map(t => t.name.replace(/[^a-zA-Z]/g, '').toUpperCase());
+    const wordLength = targetCleanNames[0].length;
+    const guesses = gameState.modeGuesses[mode] || [];
+
+    const MAX_ATTEMPTS = 6;
+    const allWon = targetCleanNames.every(name => guesses.includes(name));
 
     // Bloquear input se já ganhou ou perdeu
-    if (guesses.length >= 6) return;
-    if (guesses.includes(targetCleanName)) return;
+    if (guesses.length >= MAX_ATTEMPTS || allWon) return;
 
     if (key === '⌫' || key === 'BACKSPACE') {
         currentTermoRow.pop();
@@ -125,22 +142,19 @@ export function handleTermoKeyClick(key) {
 }
 
 export function submitTermoGuess(attemptedWord) {
-    const target = getActiveTarget();
-    if (!target) return;
+    const mode = gameState.activeMode;
+    const targets = getActiveTargets();
+    if (!targets || targets.length === 0) return;
 
-    const targetCleanName = target.name.replace(/[^a-zA-Z]/g, '').toUpperCase();
-    const wordLength = targetCleanName.length;
+    const targetCleanNames = targets.map(t => t.name.replace(/[^a-zA-Z]/g, '').toUpperCase());
+    const wordLength = targetCleanNames[0].length;
 
     if (attemptedWord.length !== wordLength) {
         showToastNotification(`A palavra deve ter ${wordLength} letras!`);
         return;
     }
 
-    // Validação estrita: apenas Pokémon reais cadastrados
-    const isValidPokemon = ALL_POKEMON.some(p => {
-        const clean = p.name.replace(/[^a-zA-Z]/g, '').toUpperCase();
-        return clean === attemptedWord;
-    });
+    const isValidPokemon = ALL_POKEMON.some(p => p.name.replace(/[^a-zA-Z]/g, '').toUpperCase() === attemptedWord);
 
     if (!isValidPokemon) {
         showToastNotification(`"${attemptedWord}" não é um Pokémon válido!`);
@@ -148,34 +162,31 @@ export function submitTermoGuess(attemptedWord) {
         return;
     }
 
-    const guesses = gameState.modeGuesses.termo || [];
+    const guesses = gameState.modeGuesses[mode] || [];
     guesses.push(attemptedWord);
-    gameState.modeGuesses.termo = guesses;
+    gameState.modeGuesses[mode] = guesses;
     currentTermoRow = [];
 
+    saveDailyGuesses(mode);
     renderTermoGrid();
     updateHintsUI();
-
-    if (attemptedWord === targetCleanName) {
-        const fullPoke = ALL_POKEMON.find(p => p.id === target.id) || target;
-        setTimeout(() => showWinModal(fullPoke), 400);
-    }
-    // Game Over é renderizado inline no grid (sem modal separado para Termo)
 }
 
 function shakeTermoRow() {
-    const rows = document.querySelectorAll('.termo-row');
-    const guesses = gameState.modeGuesses.termo || [];
-    const activeRow = rows[guesses.length];
-    if (activeRow) {
-        activeRow.classList.add('shake');
-        setTimeout(() => activeRow.classList.remove('shake'), 400);
+    // Shake animation só nas linhas que estão ativas (tabuleiros não resolvidos)
+    const activeRows = document.querySelectorAll('.termo-grid-container:not(.won) .termo-row:last-child'); // Lógica simplificada: CSS puro lida com o shake se adicionarmos na classe
+    // Melhor usar a classe no wrapper
+    const wrapper = document.getElementById('termoGridContainer');
+    if (wrapper) {
+        wrapper.classList.add('shake');
+        setTimeout(() => wrapper.classList.remove('shake'), 400);
     }
 }
 
 export function setupTermoPhysicalKeyboard() {
     document.addEventListener('keydown', (e) => {
-        if (gameState.activeMode !== 'termo') return;
+        const mode = gameState.activeMode;
+        if (mode !== 'termo' && mode !== 'dueto' && mode !== 'quarteto') return;
 
         // Não interferir quando o usuário está digitando na barra de busca
         if (document.activeElement && document.activeElement.id === 'searchBox') return;
